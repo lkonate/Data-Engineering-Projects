@@ -1,10 +1,9 @@
-
 # my_index.py
 # Python Securities Markets Index EOD Data Retrieval & Storage
 # Author: L. Konate
 # Summer 2020
 
-import time #Python Standard Library - Time access and conversions functions
+import time
 import datetime # Python Library datetime manipulation functions
 import requests
 from bs4 import BeautifulSoup
@@ -72,14 +71,12 @@ def create_index_db():
     print('Database successfully Created')
     return True
 
-
 def retrieve_symbols_from_wiki():
     """
     Download and parse the Wikipedia list of snp500 index
     constituents using requests and BeautifulSoup.
     Returns a list of tuples to add to the database creted.
     """
-
     # Store the current time, for the created_at record
     now = datetime.datetime.utcnow()
     now = datetime.datetime.strftime(now,"%Y-%m-%d-%H:%M:%S")
@@ -109,7 +106,6 @@ def retrieve_symbols_from_wiki():
     #insert_symbols_from_wiki_into_symbols_tbl(symbols_list)
     return symbols
 
-
 def insert_symbols_from_wiki_into_symbols_tbl(sym):
     """
     Inserts the s&p500 constituents symbols retrieved into the symbols table.
@@ -125,7 +121,6 @@ def insert_symbols_from_wiki_into_symbols_tbl(sym):
     # Using the MySQL connection, carry out an INSERT INTO for every symbol
     cur.executemany(mysql_insert_statement, sym)
     con.commit()
-
 
 def processed_tickers():
     """
@@ -162,7 +157,6 @@ def processed_tickers():
                 processedCount += 1
     return ('Processed = ' +processedCount, ' Not Processed = ' + errorCount)
 
-
 def retrieve_daily_historic_price_data(ticker, start_date='2015-01-01', end_date = '2019-12-31'):
     """
     Obtains data from tiingo and returns a list of tuples.
@@ -192,7 +186,6 @@ def retrieve_daily_historic_price_data(ticker, start_date='2015-01-01', end_date
     
     return price_list
 
-
 def insert_daily_historic_price_data_into_daily_price_tbl(data_vendor_id, symbol_id, daily_data):
     """
     Takes a list of tuples of daily data and adds it to the daily_price table.
@@ -221,7 +214,6 @@ def insert_daily_historic_price_data_into_daily_price_tbl(data_vendor_id, symbol
     # Using the MySQL connection, carry out an INSERT INTO for every symbol
     cur.executemany(mysql_insert_statement, daily_data)
     con.commit()
-
 
 if __name__ =='__main__':
     
@@ -253,26 +245,3 @@ if __name__ =='__main__':
     insert_symbols_from_wiki_into_symbols_tbl(symbol_list)
     time.sleep(5)
     processed_tickers()
-    time.sleep(5)
-
-    # Program End ========================================================
-
-retrieving_data_from_daily_pricedb =============================
-
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# retrieving_data.py
-
-# Select all of the historic Google adjusted close data
-mysql_output_query_statement = """select dp.price_date, dp.adj_close_price
-FROM symbol AS sym
-INNER JOIN daily_price AS dp
-ON dp.symbol_id = sym.id
-WHERE sym.ticker = ’GOOG’
-ORDER BY dp.price_date ASC;"""
-# Create a pandas dataframe from the SQL query
-goog = pd.read_sql_query(mysql_output_query_statement, con=con, index_col=’price_date’)
-# Output the dataframe tail
-print(goog.tail())
-
-# End of retrieving_data.py ============================
