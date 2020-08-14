@@ -168,7 +168,8 @@ def retrieve_daily_historic_price_data(ticker, start_date='2015-01-01', end_date
     """
     # ticker tuple to parse the tiingo web request
     ticker_tup = (ticker, start_date, end_date)
-    tii_url = "https://api.tiingo.com/tiingo/daily/%s/prices?startDate=%s&endDate=%s&token=aba0064eb7911d21af107532635316ab4095334a"
+    # replace "YOURTOKEN" at the end of the following line with your tiingo token
+    tii_url = "https://api.tiingo.com/tiingo/daily/%s/prices?startDate=%s&endDate=%s&token=YOURTOKEN"
     tii_url = tii_url%ticker_tup 
     price_list = []
     
