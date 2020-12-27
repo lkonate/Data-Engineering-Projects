@@ -192,3 +192,27 @@ for o in range(2012,2017):
 						with open(os.path.join(path, os.path.basename(img_url)[5:]),'wb') as image:
 							for chunk in html2.iter_content(100000):
 								image.write(chunk)
+
+
+def custom_day_scraper(y_start=2018,y_end=2020,m_start=1,m_end=12,d_start=1,d_end=31 ): 
+    for o in range(y_start,y_end+1): 
+        for p in range(m_start,m_end+1): 
+            for q in range(d_start,d_end+1): 
+                url='https://news.abidjan.net/caricatures/archives.asp?d=%s/%s/%s&j=%s&m=%s&a=%s'%(q,p,o,q,p,o) 
+                url_hc=url 
+                html=requests.get(url_hc, allow_redirects=False) 
+                time.sleep(random.randrange(5)) 
+                if html.status_code!=200: 
+                    print('No comic on: %s/%s/%s' %(p,q,o)) 
+                else: 
+                    soup= BeautifulSoup(html.text) 
+                    tags= soup('img') 
+                    for tag in tags: 
+                        if 'img' in tag.get('src'): 
+                            img_url= tag.get('src') 
+                            html2= requests.get(img_url) 
+                            path='year%s/month%s' %(o,p) 
+                            os.makedirs(path, exist_ok=True) 
+                            with open(os.path.join(path, os.path.basename(img_url)[5:]),'wb') as imag: 
+                                for chunk in html2.iter_content(100000): 
+                                    imag.write(chunk)
