@@ -1,9 +1,14 @@
 Data Platform Development with MySQL
+
 Overview
+
 In this project, we apply Data Modeling with MySQL and build an ETL pipeline using Python. A boutique trading firm wants to build a proprietary trading platform and a strategy using S&P500 EOD data for their activities. Here, we retrieve and store both the index components and their values using tiingo as the data open source and MySQL as the database system using Python.
+
 Index Components
+
 The components list is the most updated one as of January 1, 2021.
 Sample Record :
+
 Query:
 Select * from symbol limit 10;
 
@@ -21,9 +26,12 @@ Select * from symbol limit 10;
 |         9 | AAP    | stock      | Advance Auto Parts         | Consumer Discretionary | USD      | 2021-01-24 19:45:47 |
 |        10 | AES    | stock      | AES Corp                   | Utilities              | USD      | 2021-01-24 19:45:47 |
 +-----------+--------+------------+----------------------------+------------------------+----------+---------------------+
+
 Index Dataset
 EOD dataset of the S&P500 index as of January 24, 2021 using tiingo.
+
 Sample Record :
+
 Query:
 select * from daily_price limit 10;
 
@@ -73,21 +81,30 @@ symbol – repository of all S&P500 constituents. The list should be updated per
 symbol_id, ticker, instrument, name, sector, currency, and created_date
 
 daily_price – repository of all S&P500 constituents end-of-day trading data for the past 6 years. The time span could be adjusted as needed, along with the list of the index constituents to account for new entries and exits. Columns of the table are:
+
 daily_price_id, symbol_id, price_date, open_price, high_price, low_price, close_price, adj_close_price, volume
 Project Files
+
 database.py -> contains the code for setting up the database and tables. Running this file establishes the mysql conncection, sets up the database, and creates all the tables.
+
 index.py -> contains the code for retrieving the desired index constituents, setting them in a table from the previously created database.
 daily_price -> contains the historical daily price data retrieved using yfinance and inserted in some of the tables created by our database.
+
 Environment
+
 Python 3.7 or above
 MySQL  9.5 or above
 tiingo using either a free or paid subscription
-How to run
+
+How to run this code???
+
 Run the drive program main.py as below.
 python main.py
+
 The create_databse.py and create_tables.py files can also be run independently as below:
 python create_database.py 
 python create_tables.py
+
 Reference:
 Python3 Documentaion
 MySQL Documentation
