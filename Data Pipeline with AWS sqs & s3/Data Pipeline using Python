@@ -1,1 +1,127 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Creating Scalable Data Pipelines With Graph Animation Using AWS & Python  #
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import boto3 # OK
+from sseclient import SSEClient # OK
 
+import requests # OK
+from bs4 import BeautifulSoup # OK
+
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
+
+import json # OK
+import time # OK
+import pandas as pd # OK
+
+# Get the service resource
+client = boto3.client('sqs', 'us-east-1') # OK
+
+# Create the queue. This returns an SQS.Queue instance
+queue = client.create_queue(QueueName='covid-trial-queue2', Attributes={'DelaySeconds': '5'})
+
+# Create an Amazon S3 Bucket
+s3 = boto3.client('s3')
+
+state_value = {}
+
+def dataParser ():
+    url = 'https://www.worldometers.info/coronavirus/country/us/'
+    try:
+        res = requests.get(url, stream = True)
+        soup = BeautifulSoup(res.text, features='lxml')
+        stateList = soup.select("table")[0].select("tr")[2:]
+    except:
+        raise
+    else:
+        stateValueBuilder(stateList)
+    msgQueuer(state_value)
+
+def stateValueBuilder(stList):
+    try:
+        for i, state in enumerate(stList[:-1]):
+            tds = state.select("td")
+            k = tds[1].select("a")[0].text # state 
+            v = tds[4].text # number of deaths
+            v = int(float(v.strip(',').strip().replace(',','')))
+            state_value[k] = v
+    except:
+        pass
+
+def msgQueuer( data ):
+    try:
+        response = client.send_message(  #this returns a dictionary object
+            QueueUrl = 'https://queue.amazonaws.com/608749005603/sse_queue',
+            DelaySeconds = 5, # delay each message by 5 sec 
+            MessageBody = json.dumps(data)
+        )
+    except:
+        raise
+    else:
+        print('\t Message id %s added to queue' % response['MessageId'], sep=' ', end='', flush=True)        
+
+def msgBatchReader():
+    try:
+        response = client.receive_message( #this returns a dictionary object
+            QueueUrl = 'https://queue.amazonaws.com/608749005603/sse_queue',
+            MaxNumberOfMessages=5, # max number of msgs in batch
+            VisibilityTimeout=5,
+            WaitTimeSeconds=5, # delay each message by 5 sec 
+        )
+    except:
+        raise
+        print('No data available yet; sys awaiting next message ...')
+    else:
+        msgBatchProcessor( response)
+
+def msgBatchProcessor( resp ):
+    body = resp['Messages'][0]['Body']
+    bucket='covid-usa'
+    key= resp['Messages'][0]['MessageId']
+    receipthandle = resp['Messages'][0]['ReceiptHandle']
+    try:
+        response = s3.put_object(
+            Bucket = bucket,
+            Key= key, 
+            Body= body,
+            ACL='public-read' 
+            )
+    except:
+        raise
+    else:
+        print('\r%s file saved to aws covid repository...' % key, sep=' ', end='', flush=True)
+        msgDeQueuer( receipthandle )
+
+def msgDeQueuer( handl ):
+    try:
+        client.delete_message(
+            QueueUrl = 'https://queue.amazonaws.com/608749005603/sse_queue',
+            ReceiptHandle = handl
+        )
+        print('msg dequeued')
+    except:
+        raise
+
+style.use('fivethirtyeight')
+fig, (ax1, ax2) = plt.subplots(1,2, sharex = True, sharey =True)
+
+def animate(i):
+    D = state_value
+    D = { k: D[k] for k in sorted(D, key= D.get, reverse = True)[:10]}
+    ax1.clear()
+    ax2.clear()
+    ax1.plot(list(D.keys()), list(D.values()), 'yo--')
+    ax2.bar(list(D.keys()), list(D.values()), color = 'r', align='center',tick_label=list(D.keys()))
+
+time.sleep(10)
+
+def main():
+    dataParser ()
+    msgBatchReader()
+    style.use('fivethirtyeight')
+    fig, (ax1, ax2) = plt.subplots(1,2, sharex = True, sharey =True)
+    ani = animation.FuncAnimation(fig, animate, interval=900) # 3600 to refresh every 15 min
+
+if __name__ == '__main__':
+    main()
